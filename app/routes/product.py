@@ -96,11 +96,16 @@ def read_products(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1),
     search_term: str = None,
+    category_id: int = None,
     db: Session = Depends(get_db)
 ):
     try:
         products = product_service.get_products(
-            db, page_number=page_number, page_size=page_size, search_term=search_term)
+            db, 
+            page_number=page_number, 
+            page_size=page_size, 
+            search_term=search_term, 
+            category_id=category_id)
         return response_wrapper("success", "Products Retrieved", products)
     except Exception as e:
         if not hasattr(e, 'detail'):

@@ -53,42 +53,38 @@ class ProductService:
         return None
 
     def get_products(
-        self,
-        db: Session,
-        page_number: int = 1,
-        page_size: int = 10,
-        search_term: str = None
-    ) -> Page[Product]:
-        # Include the Category table and select the name field as category_name
-        query = db.query(Product, Category.name.label("name")).join(
-            Category, Product.category_id == Category.id
-        )
-        query = db.query(Product)
-        query = (
-            db.query(Product)
-            # Perform an outer join with Category
-            .join(Category, Product.category_id == Category.id, isouter=True)
-            # Include both Product and Category objects
-            .with_entities(Product, Category)
-        )
-        query = (
-            db.query(Product)
-            # Eager load the Category relationship
-            .options(selectinload(Product.category))
-        )
+            self,
+            db: Session,
+            page_number: int = 1,
+            page_size: int = 10,
+            search_term: str = None,
+            category_id: int = None
+        ) -> Page[Product]:
+            # Start with a base query
+            query: Query = db.query(Product)
 
-        print("queryrr", query)
-        # Apply search filter if search_term provided
-        if search_term:
-            search_expr = f"%{search_term}%"
-            query = query.filter(
-                or_(
-                    Product.name.ilike(search_expr),
-                    Product.description.ilike(search_expr)
+            # Include the Category table and select the name field as category_name
+            query = query.join(Category, Product.category_id == Category.id)
+
+            # Apply eager loading for the Category relationship
+            query = query.options(selectinload(Product.category))
+
+            # Apply search filter if search_term provided
+            if search_term:
+                search_expr = f"%{search_term}%"
+                query = query.filter(
+                    or_(
+                        Product.name.ilike(search_expr),
+                        Product.description.ilike(search_expr)
+                    )
                 )
-            )
-        # Apply pagination
-        paginated_products = paginate(
-            db, query, params=Params(size=page_size, page=page_number))
-        print("page", paginated_products)
-        return paginated_products
+
+            # Apply category filter if category_id provided
+            if category_id is not None:
+                query = query.filter(Product.category_id == category_id)
+
+            # Apply pagination
+            paginated_products = paginate(
+                db, query, params=Params(size=page_size, page=page_number))
+
+            return paginated_products
