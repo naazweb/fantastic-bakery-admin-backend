@@ -62,14 +62,4 @@ The application should now be running locally. Access it at http://localhost:800
 
 ## Usage
 
-### 1. API to create a Product
-
-```cURL
-curl --location 'http://127.0.0.1:8000/products/' \
---header 'Content-Type: application/json' \
---data '{
-    "name": "Red Velvet Cake"
-    "price": 85.32,
-    "quantity":"8"
-}'
-```
+The swagger documentation for the API can be ready to access at http://localhost:8000/docs/
