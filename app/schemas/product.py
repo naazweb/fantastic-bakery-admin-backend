@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from .category import Category  # Assuming Category model is defined in category.py
 
 
 class ProductBase(BaseModel):
@@ -10,6 +11,7 @@ class ProductBase(BaseModel):
                           description="The quantity of the product")
     price: float = Field(..., title="Price",
                          description="The price of the product")
+    category_id: int  # Category ID
 
     class Config:
         orm_mode = True
@@ -27,6 +29,7 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     quantity: Optional[int] = None
     price: Optional[float] = None
+    category_id: int = None
 
     class Config:
         orm_mode = True
@@ -34,6 +37,7 @@ class ProductUpdate(BaseModel):
 
 class Product(ProductBase):
     id: int
+    category: Category  # Include Category object
 
     class Config:
         orm_mode = True

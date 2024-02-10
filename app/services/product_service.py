@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.models.product import Product
+from app.models.category import Category
 from app.schemas import product as product_schema
 from sqlalchemy import select, or_
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -13,7 +14,8 @@ class ProductService:
             name=product.name,
             description=product.description,
             quantity=product.quantity,
-            price=product.price
+            price=product.price,
+            category_id=product.category_id
         )
         # Add the SQLAlchemy Product model to the session
         db.add(db_product)
@@ -57,7 +59,25 @@ class ProductService:
         page_size: int = 10,
         search_term: str = None
     ) -> Page[Product]:
+        # Include the Category table and select the name field as category_name
+        query = db.query(Product, Category.name.label("name")).join(
+            Category, Product.category_id == Category.id
+        )
         query = db.query(Product)
+        query = (
+            db.query(Product)
+            # Perform an outer join with Category
+            .join(Category, Product.category_id == Category.id, isouter=True)
+            # Include both Product and Category objects
+            .with_entities(Product, Category)
+        )
+        query = (
+            db.query(Product)
+            # Eager load the Category relationship
+            .options(selectinload(Product.category))
+        )
+
+        print("queryrr", query)
         # Apply search filter if search_term provided
         if search_term:
             search_expr = f"%{search_term}%"
@@ -68,4 +88,7 @@ class ProductService:
                 )
             )
         # Apply pagination
-        return paginate(db, query, params=Params(size=page_size, page=page_number))
+        paginated_products = paginate(
+            db, query, params=Params(size=page_size, page=page_number))
+        print("page", paginated_products)
+        return paginated_products

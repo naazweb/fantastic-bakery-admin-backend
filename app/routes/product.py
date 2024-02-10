@@ -63,7 +63,12 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
 def update_product(product_id: int, product: product_schema.ProductUpdate, db: Session = Depends(get_db)):
     try:
         product = product_service.update_product(db, product_id, product)
-        return response_wrapper("success", "Product Updated", product)
+        if product:
+            return response_wrapper("success", "Product Updated", product)
+        raise HTTPException(404, response_wrapper(
+            "error", "Product Not Found"))
+        return response_wrapper("error", "Product Not Found")
+
     except Exception as e:
         if not hasattr(e, 'detail'):
             e.detail = response_wrapper("error", "Internal Server Error")
@@ -77,7 +82,8 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
         product = product_service.delete_product(db, product_id)
         if product:
             return response_wrapper("success", "Product Deleted", product)
-        return response_wrapper("error", "Product Not Found")
+        raise HTTPException(404, response_wrapper(
+            "error", "Product Not Found"))
     except Exception as e:
         if not hasattr(e, 'detail'):
             e.detail = response_wrapper("error", "Internal Server Error")

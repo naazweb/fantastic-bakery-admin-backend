@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from app.routes import product
+from app.routes import product, category
 from app.database import Base, engine
 from fastapi.exceptions import RequestValidationError, HTTPException
 from app.utils import response_wrapper
@@ -13,6 +13,9 @@ from fastapi_pagination import Page, add_pagination, paginate
 # Create a FastAPI instance
 app = FastAPI()
 add_pagination(app)
+
+# Creates all tables in database
+Base.metadata.create_all(bind=engine)
 
 # Allow requests from your React application's domain
 origins = [
@@ -58,12 +61,10 @@ async def generic_exception_handler(request, exc):
 
 # Include your API routers here
 app.include_router(product.router, prefix="")
+app.include_router(category.router, prefix="")
 
 
 if __name__ == "__main__":
-    # Create the database tables
-    Base.metadata.create_all(bind=engine)
-
     # Run the FastAPI application using Uvicorn server
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
