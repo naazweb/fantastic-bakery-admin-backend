@@ -26,10 +26,8 @@ class ProductService:
         # Return the SQLAlchemy Product model
         return db_product
 
-    def get_product(self, db: Session, product_id: int) -> Product:
-        return db.query(Product).filter(Product.id == product_id).first()
-
     def update_product(self, db: Session, product_id: int, product_update: product_schema.ProductUpdate) -> Product:
+        # get the product by id
         db_product = self.get_product(db, product_id)
         if db_product:
             # Prepare a dictionary with the fields to update
@@ -45,46 +43,52 @@ class ProductService:
         return None
 
     def delete_product(self, db: Session, product_id: int) -> Product:
+        # get the product by id
         product = self.get_product(db, product_id)
         if product:
+            # delete if product exists
             db.delete(product)
             db.commit()
             return product
         return None
 
+    def get_product(self, db: Session, product_id: int) -> Product:
+        # filter by product id
+        return db.query(Product).filter(Product.id == product_id).first()
+
     def get_products(
-            self,
-            db: Session,
-            page_number: int = 1,
-            page_size: int = 10,
-            search_term: str = None,
-            category_id: int = None
-        ) -> Page[Product]:
-            # Start with a base query
-            query: Query = db.query(Product)
+        self,
+        db: Session,
+        page_number: int = 1,
+        page_size: int = 10,
+        search_term: str = None,
+        category_id: int = None
+    ) -> Page[Product]:
+        # Start with a base query
+        query = db.query(Product)
 
-            # Include the Category table and select the name field as category_name
-            query = query.join(Category, Product.category_id == Category.id)
+        # Include the Category table and select the name field as category_name
+        query = query.join(Category, Product.category_id == Category.id)
 
-            # Apply eager loading for the Category relationship
-            query = query.options(selectinload(Product.category))
+        # Apply eager loading for the Category relationship
+        query = query.options(selectinload(Product.category))
 
-            # Apply search filter if search_term provided
-            if search_term:
-                search_expr = f"%{search_term}%"
-                query = query.filter(
-                    or_(
-                        Product.name.ilike(search_expr),
-                        Product.description.ilike(search_expr)
-                    )
+        # Apply search filter if search_term provided
+        if search_term:
+            search_expr = f"%{search_term}%"
+            query = query.filter(
+                or_(
+                    Product.name.ilike(search_expr),
+                    Product.description.ilike(search_expr)
                 )
+            )
 
-            # Apply category filter if category_id provided
-            if category_id is not None:
-                query = query.filter(Product.category_id == category_id)
+        # Apply category filter if category_id provided
+        if category_id is not None:
+            query = query.filter(Product.category_id == category_id)
 
-            # Apply pagination
-            paginated_products = paginate(
-                db, query, params=Params(size=page_size, page=page_number))
+        # Apply pagination
+        paginated_products = paginate(
+            db, query, params=Params(size=page_size, page=page_number))
 
-            return paginated_products
+        return paginated_products

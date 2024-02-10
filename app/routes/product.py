@@ -14,6 +14,9 @@ product_service = ProductService()
 
 # Dependency to get a database session
 def get_db():
+    """
+    Dependency to get a database session.
+    """
     db = SessionLocal()
     try:
         yield db
@@ -25,14 +28,12 @@ def get_db():
 @router.post("/products/", response_model=GenericResponse[product_schema.ProductCreate])
 def create_product(product: product_schema.ProductCreate, db: Session = Depends(get_db)):
     """
-    Create a new item with the provided details.
+    Create a new product.
 
-    - **name**: The name of the item.
-    - **description**: Optional description of the item.
-    - **price**: The price of the item.
-    - **tax**: Optional tax amount for the item.
+    :param product: The details of the product to create.
+    :param db: Database session dependency.
 
-    Returns the created item.
+    :return: The created product.
     """
     try:
         product = product_service.create_product(db, product)
@@ -43,24 +44,18 @@ def create_product(product: product_schema.ProductCreate, db: Session = Depends(
         raise e
 
 
-# Get a product by ID
-@router.get("/products/{product_id}", response_model=GenericResponse[product_schema.Product])
-def read_product(product_id: int, db: Session = Depends(get_db)):
-    try:
-        product = product_service.get_product(db, product_id)
-        if product is None:
-            raise HTTPException(404, response_wrapper(
-                "error", "Product Not Found"))
-        return response_wrapper("success", "Product Retrieved", product)
-    except Exception as e:
-        if not hasattr(e, 'detail'):
-            e.detail = response_wrapper("error", "Internal Server Error")
-        raise e
-
-
 # Update a product by ID
 @router.put("/products/{product_id}", response_model=GenericResponse[product_schema.ProductUpdate])
 def update_product(product_id: int, product: product_schema.ProductUpdate, db: Session = Depends(get_db)):
+    """
+    Update a product by its ID.
+
+    :param product_id: The ID of the product to update.
+    :param product: The details of the product to update.
+    :param db: Database session dependency.
+
+    :return: The updated product.
+    """
     try:
         product = product_service.update_product(db, product_id, product)
         if product:
@@ -78,12 +73,43 @@ def update_product(product_id: int, product: product_schema.ProductUpdate, db: S
 # Delete a product by ID
 @router.delete("/products/{product_id}", response_model=GenericResponse[product_schema.Product])
 def delete_product(product_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a product by its ID.
+
+    :param product_id: The ID of the product to delete.
+    :param db: Database session dependency.
+
+    :return: The deleted product.
+    """
     try:
         product = product_service.delete_product(db, product_id)
         if product:
             return response_wrapper("success", "Product Deleted", product)
         raise HTTPException(404, response_wrapper(
             "error", "Product Not Found"))
+    except Exception as e:
+        if not hasattr(e, 'detail'):
+            e.detail = response_wrapper("error", "Internal Server Error")
+        raise e
+
+
+# Get a product by ID
+@router.get("/products/{product_id}", response_model=GenericResponse[product_schema.Product])
+def read_product(product_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieve a product by its ID.
+
+    :param product_id: The ID of the product to retrieve.
+    :param db: Database session dependency.
+
+    :return: The retrieved product.
+    """
+    try:
+        product = product_service.get_product(db, product_id)
+        if product is None:
+            raise HTTPException(404, response_wrapper(
+                "error", "Product Not Found"))
+        return response_wrapper("success", "Product Retrieved", product)
     except Exception as e:
         if not hasattr(e, 'detail'):
             e.detail = response_wrapper("error", "Internal Server Error")
@@ -99,12 +125,23 @@ def read_products(
     category_id: int = None,
     db: Session = Depends(get_db)
 ):
+    """
+    Retrieve all products with pagination and optional search filtering.
+
+    :param page_number: The page number for pagination (default: 1).
+    :param page_size: The page size for pagination (default: 10).
+    :param search_term: Optional search term to filter products by name or description.
+    :param category_id: Optional category ID to filter products by category.
+    :param db: Database session dependency.
+
+    :return: Paginated list of products.
+    """
     try:
         products = product_service.get_products(
-            db, 
-            page_number=page_number, 
-            page_size=page_size, 
-            search_term=search_term, 
+            db,
+            page_number=page_number,
+            page_size=page_size,
+            search_term=search_term,
             category_id=category_id)
         return response_wrapper("success", "Products Retrieved", products)
     except Exception as e:
