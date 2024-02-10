@@ -7,9 +7,26 @@ from app.database import Base, engine
 from fastapi.exceptions import RequestValidationError, HTTPException
 from app.utils import response_wrapper
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import Page, add_pagination, paginate
 
 # Create a FastAPI instance
 app = FastAPI()
+add_pagination(app)
+
+# Allow requests from your React application's domain
+origins = [
+    "http://localhost",
+    "http://localhost:3000",  # Replace with your React app's domain
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 
 # Handle Validation Error

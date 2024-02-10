@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
 from app.models.product import Product
 from app.schemas import product as product_schema
+from sqlalchemy import select, or_
+from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import Page, Params
 
 
 class ProductService:
@@ -53,7 +56,7 @@ class ProductService:
         page_number: int = 1,
         page_size: int = 10,
         search_term: str = None
-    ) -> list[Product]:
+    ) -> Page[Product]:
         query = db.query(Product)
         # Apply search filter if search_term provided
         if search_term:
@@ -64,9 +67,5 @@ class ProductService:
                     Product.description.ilike(search_expr)
                 )
             )
-        # Calculate offset and limit for pagination
-        offset = (page_number - 1) * page_size
-        limit = page_size
         # Apply pagination
-        products = query.offset(offset).limit(limit).all()
-        return products
+        return paginate(db, query, params=Params(size=page_size, page=page_number))
