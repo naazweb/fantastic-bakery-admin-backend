@@ -11,6 +11,11 @@ The Fantastic Bakery Admin Backend is a robust backend API designed specifically
 -   **Stock Tracking**: Keep track of product quantities in real-time to ensure timely replenishment and avoid stockouts.
 -   **Data Insights**: Analytics to gain insights into inventory trends, sales performance, and product popularity.
 
+## Build And Run Application Using Docker
+```bash
+docker-compose up --build
+```
+
 ## Setup
 
 To run this project locally, follow these steps:

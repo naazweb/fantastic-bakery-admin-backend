@@ -9,6 +9,7 @@ services:
       - DB_NAME=mydatabase
       - DB_USERNAME=myuser
       - DB_PASSWORD=mypassword
+      - DB_HOST=database
     depends_on:
       - database
 
